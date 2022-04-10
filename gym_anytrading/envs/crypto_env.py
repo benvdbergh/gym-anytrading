@@ -42,6 +42,10 @@ class CryptoEnv(TradingEnv):
 
             if self._position == Positions.Long:
                 step_reward += price_diff
+            
+            elif self._position == Positions.Short:
+                step_reward += -price_diff
+            
 
         return step_reward
 
@@ -59,7 +63,7 @@ class CryptoEnv(TradingEnv):
             if self._position == Positions.Long:
                 shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
                 self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
-
+            
 
     def max_possible_profit(self):
         current_tick = self._start_tick
