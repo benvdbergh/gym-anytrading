@@ -23,3 +23,13 @@ register(
         'frame_bound': (30, len(datasets.STOCKS_GOOGL))
     }
 )
+
+register(
+    id='crypto-v0',
+    entry_point='gym_anytrading.envs:CryptoEnv',
+    kwargs={
+        'df': deepcopy(datasets.FOREX_EURUSD_1H_ASK),
+        'window_size': 30,
+        'frame_bound': (30, len(datasets.FOREX_EURUSD_1H_ASK))
+    }
+)
