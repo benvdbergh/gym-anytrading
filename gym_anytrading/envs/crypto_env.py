@@ -1,4 +1,5 @@
 import numpy as np
+import talib.abstract as ta
 
 from .trading_env import TradingEnv, Actions, Positions
 
@@ -16,16 +17,23 @@ class CryptoEnv(TradingEnv):
 
 
     def _process_data(self):
-        prices = self.df.loc[:, 'Close'].to_numpy()
+        prices = self.df.loc[:, 'close'].to_numpy()
 
-        prices[self.frame_bound[0] - self.window_size]  # validate index (TODO: Improve validation)
+        assert self.frame_bound[0] >= self.window_size
+        
+        # prices[self.frame_bound[0] - self.window_size]  # validate index (TODO: Improve validation)
         prices = prices[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
 
+        # Implement "get_frame"
         diff = np.insert(np.diff(prices), 0, 0)
-        signal_features = np.column_stack((prices, diff))
+        rsi = ta.RSI(self.df).to_numpy()[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
+        
+        signal_features = np.column_stack((prices, diff, rsi))
 
         return prices, signal_features
 
+    def get_frame(self, df, frame_bound):
+        pass
 
     def _calculate_reward(self, action):
         step_reward = 0

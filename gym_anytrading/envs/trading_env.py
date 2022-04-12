@@ -69,15 +69,18 @@ class TradingEnv(gym.Env):
 
 
     def step(self, action):
+        # Administration
         self._done = False
         self._current_tick += 1
 
         if self._current_tick == self._end_tick:
             self._done = True
 
+        # Calculate rewared based on current step
         step_reward = self._calculate_reward(action)
         self._total_reward += step_reward
 
+        # Get results based on the chosen action
         self._update_profit(action)
 
         trade = False
@@ -90,7 +93,11 @@ class TradingEnv(gym.Env):
             self._last_trade_tick = self._current_tick
 
         self._position_history.append(self._position)
+        
+        # Get next state
         observation = self._get_observation()
+        
+        # Log history
         info = dict(
             total_reward = self._total_reward,
             total_profit = self._total_profit,
