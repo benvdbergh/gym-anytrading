@@ -1,4 +1,5 @@
 import numpy as np
+from pandas import DataFrame
 import talib.abstract as ta
 
 from .trading_env import TradingEnv, Actions, Positions
@@ -14,26 +15,43 @@ class CryptoEnv(TradingEnv):
 
         self.trade_fee_bid_percent = 0.01  # unit
         self.trade_fee_ask_percent = 0.005  # unit
-
+        self.rsi_window = 14
 
     def _process_data(self):
-        prices = self.df.loc[:, 'close'].to_numpy()
-
         assert self.frame_bound[0] >= self.window_size
         
-        # prices[self.frame_bound[0] - self.window_size]  # validate index (TODO: Improve validation)
-        prices = prices[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
-
-        # Implement "get_frame"
-        diff = np.insert(np.diff(prices), 0, 0)
-        rsi = ta.RSI(self.df).to_numpy()[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
+        self.df = self.populate_indicators(self.df)
         
-        signal_features = np.column_stack((prices, diff, rsi))
-
+        prices = self.get_frame(self.df.loc[:, 'close']).to_numpy()
+        # prices = prices[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
+        
+        
+        #rsi = self.get_frame(ta.RSI(self.df, timeperiod=14)).to_numpy()
+        #difference = self.get_frame(self.df['diff']).to_numpy()
+        
+        #signal_features = np.column_stack((prices, difference, rsi))
+        signal_features = self.get_frame(self.df).to_numpy()
+        pricesdf = self.get_frame(self.df).loc[:,'close'].to_numpy()
+        print(signal_features)
         return prices, signal_features
 
-    def get_frame(self, df, frame_bound):
-        pass
+    #TODO: get indicators from strategy
+    def populate_indicators(self, df:DataFrame):
+        df['diff'] = df['close'].diff()
+        df['rsi'] = ta.RSI(self.df, timeperiod=14)
+        macd = ta.MACD(df)
+        df['macd'] = macd['macd']
+        df['macdsignal'] = macd['macdsignal']
+        df['macdhist'] = macd['macdhist']
+        
+        #TODO: Replace hardcoded index by number of Nan rows
+        df = df.iloc[35:]
+        print(df.head())
+        return df[['close', 'diff', 'rsi', 'macdsignal']]
+    
+    
+    def get_frame(self, df):
+        return df[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
 
     def _calculate_reward(self, action):
         step_reward = 0
