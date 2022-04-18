@@ -109,7 +109,13 @@ class TradingEnv(gym.Env):
 
 
     def _get_observation(self):
-        return self.signal_features[(self._current_tick-self.window_size):self._current_tick]
+        # Memory in gym
+        obs = self.signal_features[(self._current_tick-self.window_size):self._current_tick]
+
+        # Memory in DQN model
+        obs = self.signal_features[self._current_tick]
+
+        return 
 
 
     def _update_history(self, info):

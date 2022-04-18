@@ -70,7 +70,7 @@ class CryptoEnv(TradingEnv):
                 step_reward += price_diff
             
             elif self._position == Positions.Short:
-                step_reward += -price_diff
+                step_reward -= price_diff
             
 
         return step_reward
