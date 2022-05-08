@@ -40,9 +40,9 @@ class CryptoEnv(TradingEnv):
         df['diff'] = df['close'].diff()
         df['rsi'] = ta.RSI(self.df, timeperiod=14)
         macd = ta.MACD(df)
-        df['macd'] = macd['macd']
-        df['macdsignal'] = macd['macdsignal']
-        df['macdhist'] = macd['macdhist']
+        df['macd'] = macd['macd'].diff()
+        df['macdsignal'] = macd['macdsignal'].diff()
+        df['macdhist'] = macd['macdhist'].diff()
         
         #TODO: Replace hardcoded index by number of Nan rows
         df = df.iloc[35:]
