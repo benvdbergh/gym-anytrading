@@ -1,3 +1,5 @@
+import random
+import sqlite3
 import gym
 from gym import spaces
 from gym.utils import seeding
@@ -46,9 +48,24 @@ class TradingEnv(gym.Env):
         self._position_history = None
         self._total_reward = None
         self._total_profit = None
+        self._trading_period = None
         self._first_rendering = None
         self.history = None
 
+        # database
+        self.db_file = "training.db"
+        self.db_connection = None
+
+    def reconnect_database(self, db_file):
+        if self.db_connection:
+                self.db_connection.close()
+
+        try:
+            self.db_connection = sqlite3.connect(db_file)
+            print(sqlite3.version)
+        except Exception as e:
+            print(e)
+            
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -57,7 +74,10 @@ class TradingEnv(gym.Env):
 
     def reset(self):
         self._done = False
-        self._current_tick = self._start_tick
+        # self._current_tick = self._start_tick
+        
+        self._episode_start_tick = random.randrange(self._start_tick, (self._end_tick - self.window_size))
+        self._current_tick = self._episode_start_tick
         self._last_trade_tick = self._current_tick - 1
         self._position = Positions.Short
         self._position_history = (self.window_size * [None]) + [self._position]
@@ -65,6 +85,9 @@ class TradingEnv(gym.Env):
         self._total_profit = 1.  # unit
         self._first_rendering = True
         self.history = {}
+
+        self.reconnect_database(self.db_file)
+
         return self._get_observation()
 
 
@@ -101,7 +124,8 @@ class TradingEnv(gym.Env):
         info = dict(
             total_reward = self._total_reward,
             total_profit = self._total_profit,
-            position = self._position.value
+            #position = self._position.value,
+            episode_period = f'{self._episode_start_tick} -> {self._current_tick}'
         )
         self._update_history(info)
 
@@ -110,12 +134,12 @@ class TradingEnv(gym.Env):
 
     def _get_observation(self):
         # Memory in gym
-        obs = self.signal_features[(self._current_tick-self.window_size):self._current_tick]
+        # obs = self.signal_features[(self._current_tick-self.window_size):self._current_tick]
 
         # Memory in DQN model
         obs = self.signal_features[self._current_tick]
 
-        return 
+        return obs
 
 
     def _update_history(self, info):
